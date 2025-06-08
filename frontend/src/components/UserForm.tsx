@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { api } from "@/lib/api"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 const schema = z.object({
+  id: z.number().optional(),
   nome: z.string().min(3, "Nome é obrigatório"),
   cpf: z.string().min(11, "CPF inválido").max(14),
   cep: z.string().min(8, "CEP inválido").max(9),
@@ -19,17 +20,30 @@ const schema = z.object({
 
 type FormData = z.infer<typeof schema>
 
-export function UserForm() {
+type UserFormProps = {
+  usuarioSelecionado?: FormData
+  onSubmitCallback?: () => void
+}
+
+export function UserForm({ usuarioSelecionado, onSubmitCallback }: UserFormProps) {
   const {
     register,
     handleSubmit,
     setValue,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
   })
 
   const [erroCep, setErroCep] = useState("")
+
+  // Preenche os campos se estiver editando
+  useEffect(() => {
+    if (usuarioSelecionado) {
+      reset(usuarioSelecionado)
+    }
+  }, [usuarioSelecionado, reset])
 
   const handleBuscarCep = async (cep: string) => {
     try {
@@ -46,10 +60,18 @@ export function UserForm() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await api.post("/usuarios", data)
-      alert("Usuário cadastrado com sucesso!")
+      if (data.id) {
+        await api.put(`/usuarios/${data.id}`, data)
+        alert("Usuário atualizado com sucesso!")
+      } else {
+        await api.post("/usuarios", data)
+        alert("Usuário cadastrado com sucesso!")
+      }
+
+      onSubmitCallback?.()
+      reset()
     } catch {
-      alert("Erro ao cadastrar. CPF pode já estar em uso.")
+      alert("Erro ao salvar. CPF pode já estar em uso.")
     }
   }
 
@@ -97,7 +119,7 @@ export function UserForm() {
       </div>
 
       <Button type="submit" disabled={isSubmitting} className="w-full">
-        {isSubmitting ? "Salvando..." : "Salvar"}
+        {isSubmitting ? "Salvando..." : usuarioSelecionado ? "Atualizar" : "Salvar"}
       </Button>
     </form>
   )
