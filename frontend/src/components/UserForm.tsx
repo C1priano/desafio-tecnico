@@ -6,11 +6,15 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { api } from "@/lib/api"
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
+import { formatarCPF } from "@/utils/formatCpf"
 
 const schema = z.object({
   id: z.number().optional(),
-  nome: z.string().min(3, "Nome é obrigatório"),
-  cpf: z.string().min(11, "CPF inválido").max(14),
+  nome: z.string().min(3, "O nome é obrigatório"),
+  cpf: z
+    .string()
+    .regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, "Favor, ajuste o CPF conforme o exemplo: 123.456.789-00"),
   cep: z.string().min(8, "CEP inválido").max(9),
   logradouro: z.string().optional(),
   bairro: z.string().optional(),
@@ -31,6 +35,7 @@ export function UserForm({ usuarioSelecionado, onSubmitCallback }: UserFormProps
     handleSubmit,
     setValue,
     reset,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -38,7 +43,6 @@ export function UserForm({ usuarioSelecionado, onSubmitCallback }: UserFormProps
 
   const [erroCep, setErroCep] = useState("")
 
-  // Preenche os campos se estiver editando
   useEffect(() => {
     if (usuarioSelecionado) {
       reset(usuarioSelecionado)
@@ -62,16 +66,16 @@ export function UserForm({ usuarioSelecionado, onSubmitCallback }: UserFormProps
     try {
       if (data.id) {
         await api.put(`/usuarios/${data.id}`, data)
-        alert("Usuário atualizado com sucesso!")
+        toast.success("Usuário atualizado com sucesso!")
       } else {
         await api.post("/usuarios", data)
-        alert("Usuário cadastrado com sucesso!")
+        toast.success("Usuário cadastrado com sucesso!")
       }
 
       onSubmitCallback?.()
       reset()
     } catch {
-      alert("Erro ao salvar. CPF pode já estar em uso.")
+      toast.error("Erro ao salvar. CPF pode já estar em uso.")
     }
   }
 
@@ -85,7 +89,10 @@ export function UserForm({ usuarioSelecionado, onSubmitCallback }: UserFormProps
 
       <div>
         <Label>CPF</Label>
-        <Input {...register("cpf")} />
+        <Input
+          value={watch("cpf")}
+          onChange={(e) => setValue("cpf", formatarCPF(e.target.value))}
+        />
         {errors.cpf && <p className="text-red-500 text-sm">{errors.cpf.message}</p>}
       </div>
 

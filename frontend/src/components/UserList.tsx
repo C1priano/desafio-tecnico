@@ -5,6 +5,7 @@ import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useState } from "react"
+import { toast } from "sonner"
 
 type Usuario = {
   id: number
@@ -38,12 +39,12 @@ export function UserList({ onSelectUsuario }: UserListProps) {
 
     try {
       await api.delete(`/usuarios/${usuarioParaExcluir.id}`)
-      alert("Usuário excluído com sucesso!")
+      toast.success("Usuário excluído com sucesso!")
       setUsuarioParaExcluir(null)
       setConfirmandoExclusao(false)
       refetch()
     } catch {
-      alert("Erro ao excluir usuário.")
+      toast.error("Erro ao excluir usuário.")
     }
   }
 

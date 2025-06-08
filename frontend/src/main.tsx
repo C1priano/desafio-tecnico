@@ -6,6 +6,7 @@ import { Home } from "./pages/Home"
 import { Register } from "./pages/Register"
 import { User } from "./pages/User"
 import { ReactQueryProvider } from "./lib/react-query"
+import { Toaster } from "sonner"
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -16,6 +17,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/register" element={<Register />} />
           <Route path="/user" element={<User />} />
         </Routes>
+        <Toaster richColors position="top-right" />
       </BrowserRouter>
     </ReactQueryProvider>
   </React.StrictMode>
